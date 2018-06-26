@@ -27,19 +27,23 @@ jQuery( document ).on( 'click', '.like-wrapper > a', function(e) {
 		  return this.nodeType !== 0; 
 		})[0].nodeValue = "Liked" 			
 	 } 
-
+	 //console.log('security ' + security);
+	 //console.log('ajax_public_handle.ajax_nonce ' + ajax_public_handle.ajax_nonce);
 	jQuery.ajax({
 		url : ajax_public_handle.ajaxurl,//wp_localize_script
-		type : 'post',
+		type : 'post',  
 		data : {
-			action : 'tga_ajax_public_handler',
-			post_id : post_id
-		},
-		success : function( response ) {
+			action : 'tga_ajax_public_handler', 
+			post_id : post_id,
+			security: ajax_public_handle.ajax_nonce 
+		}, 
+		success : function( response ) { 
 			jQuery(spanElem).html( response );
-			// console.log('response ' + response);
+			console.log('response ' + response);// 7			
 		}
-	});
+
+
+	});//jQuery.ajax
 
 	//return false; 
 
