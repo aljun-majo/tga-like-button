@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name:  TGA Like Button
+Plugin Name:  TGA Like Button and FB emojis
 Plugin URI:   https://thegoodartisan.com
-Description:  Video series demo Only
-Version:      0.0
+Description:  Video series demo Only, with FB emojis
+Version:      0.2
 Author:       baymax
 Author URI:   https://thegoodartisan.com
 License:      GPL2
@@ -39,11 +39,15 @@ function ajax_public_enqueue_scripts( $hook ) {
 	// define script url
 	$script_url = plugins_url( 'public/js/tga-like-button.js', __FILE__ );
 
-	// define ajax url
+	//Set Your Nonce
+	$ajax_nonce = wp_create_nonce( "thegoodartisan-security-nonce" ); 
+
+	// define ajax url http:// or https://
 	$ajax_url = admin_url( 'admin-ajax.php' );
 
 	// define script
 	$script = array( 
+		'ajax_nonce'=> $ajax_nonce,
 		'ajaxurl' => $ajax_url 
 		);
 
@@ -71,11 +75,12 @@ function tga_like_button_append_content( $content ) {
 
 	//if( is_single() ) { 
 	if( is_single() || is_home() ) { 
-	  $append_likebutton_content = ''; 
+	  $append_likebutton_content = '';  
+
 
 		// table = wp_postmeta   
 		// rows = post_id = ### (unique value) || meta_key = 'like_count' || meta_value = (start 1) or (incremented value)
-		$like = get_post_meta( get_the_ID(), 'like_count', true );
+		$like = get_post_meta( get_the_ID(), 'like_count', true );//ex: meta_value = 5
 		$like = ( empty( $like ) ) ? 0 : $like;// set value to zero if empty
 
 		// echo "<pre>";
@@ -97,33 +102,35 @@ function tga_like_button_append_content( $content ) {
 			$like = 0;
 		} 
 
-		$like_text = ($like != 0) ? 'Liked' : 'Like'; 
+		$like_text = ($like != 0) ? 'Liked' : 'Like';     
 		
 		$append_likebutton_content = '<div class="like-wrapper py-3">
 											<a class="btn btn-danger" href="' . admin_url( 'admin-ajax.php?action=tga_ajax_public_handler&post_id=' . get_the_ID() ) . '" data-id="' . get_the_ID() . '">
-												' . $like_text . '  
+												' . $like_text . '   
 												<span class="' . get_the_ID() . ' like-count-ui ml-3 badge badge-light btn-lg">' . number_format_i18n( (int)$like ) . 
-												'</span>
-											</a>
-										</div>'; 
+												'</span>  
+											</a> 
+										</div>';   
 	 
-		$content = $content .  $append_likebutton_content;
+		$content = $content . $append_likebutton_content;   
 
 	 }//if is_single() 
 
-  return $content;
-
+  return $content; 
 }
 add_filter( 'the_content', 'tga_like_button_append_content' );
 
  
 // process ajax request 
-function tga_ajax_public_handler() { 
-
+function tga_ajax_public_handler() {  
+ 
+	//check the $ajax_nonce value 
+	check_ajax_referer( 'thegoodartisan-security-nonce', 'security' );    
+  
 	//find the post meta curret value  
 	// wp_postmeta table AND rows 
 	// post_id = ### (unique value) || meta_key = 'like_count' || meta_value = (start 1) or (incremented value)
-	$like = get_post_meta( $_REQUEST['post_id'], 'like_count', true );
+	$like = get_post_meta( $_REQUEST['post_id'], 'like_count', true );//ex meta_value = 5
 
 		//force $like to be a number
 		//ex strval(intval($like) =  1a => 1
@@ -139,11 +146,11 @@ function tga_ajax_public_handler() {
 			}
 
 		}
-		//increment current value
-		$like++;
+		//increment current value = 6
+		$like++;//5 + 1 = 6
 
 
-	//send/update to database the new value
+	//send/update to database the new value = 6
 	update_post_meta( $_REQUEST['post_id'], 'like_count', $like );
 
 	//char char
@@ -156,7 +163,7 @@ function tga_ajax_public_handler() {
 	}
 
 	// end processing
-	wp_die();
+	wp_die(); 
 
 }
 
@@ -165,6 +172,9 @@ add_action( 'wp_ajax_tga_ajax_public_handler', 'tga_ajax_public_handler' );
 
 // ajax hook for non-logged-in users: wp_ajax_nopriv_{action}
 add_action( 'wp_ajax_nopriv_tga_ajax_public_handler', 'tga_ajax_public_handler' );
+
+
+
 
 
 
